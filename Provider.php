@@ -3,6 +3,7 @@
 namespace SocialiteProviders\OpenStreetMap;
 
 use GuzzleHttp\RequestOptions;
+use Illuminate\Support\Arr;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
@@ -40,7 +41,7 @@ class Provider extends AbstractProvider
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            'https://api.openstreetmap.org/api/0.6/user/details',
+            'https://api.openstreetmap.org/api/0.6/user/details.json',
             [
                 RequestOptions::HEADERS => [
                     'Authorization' => 'Bearer '.$token,
@@ -48,15 +49,8 @@ class Provider extends AbstractProvider
             ]
         );
 
-        $xml = simplexml_load_string((string) $response->getBody());
-        $user = $xml->user;
-        $avatar = $user->img['href'];
-
-        return array(
-            'id' => $user['id'],
-            'username' => $user['display_name'],
-            'avatar' => $avatar,
-        );
+        $json = json_decode($response->getBody(), true);
+        return $json['user'];
     }
 
     /**
@@ -65,11 +59,27 @@ class Provider extends AbstractProvider
     protected function mapUserToObject(array $user)
     {
         return (new User())->setRaw($user)->map([
-            'id'       => $user['elements'][0]['id'],
-            'nickname' => null,
-            'name'     => $user['elements'][0]['name'],
+            'id'       => $user['id'],
+            'nickname' => $user['display_name'],
+            'name'     => null,
             'email'    => null,
-            'avatar'   => $user['elements'][0]['avatar'],
+            'avatar'   => Arr::get($user, 'img.href', null),
+
+            'description' => Arr::get($user, 'description'),
+            'account_created' => Arr::get($user, 'account_created'),
+            'changesets_count' => Arr::get($user, 'changesets.count'),
+            'traces_count' => Arr::get($user, 'traces.count'),
+            'blocks_received' => [
+                'count' => Arr::get($user, 'blocks.received.count'),
+                'active' => Arr::get($user, 'blocks.received.active'),
+            ],
+            'messages' => [
+                'received' => [
+                    'count' => Arr::get($user, 'messages.received.count'),
+                    'unread' => Arr::get($user, 'messages.received.unread'),
+                ],
+                'sent' => Arr::get($user, 'messages.sent'),
+            ],
         ]);
     }
 }

@@ -45,6 +45,5 @@ return Socialite::driver('openstreetmap')->redirect();
 
 - ``id``
 - ``nickname``
-- ``name``
-- ``email``
+- ``name`` (same as ``nickname``)
 - ``avatar``

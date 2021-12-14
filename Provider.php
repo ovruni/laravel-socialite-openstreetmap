@@ -66,25 +66,9 @@ class Provider extends AbstractProvider
         return (new User())->setRaw($user)->map([
             'id'       => $user['id'],
             'nickname' => $user['display_name'],
-            'name'     => null,
+            'name'     => $user['display_name'],
             'email'    => null,
             'avatar'   => Arr::get($user, 'img.href', null),
-
-            'description' => Arr::get($user, 'description'),
-            'account_created' => Arr::get($user, 'account_created'),
-            'changesets_count' => Arr::get($user, 'changesets.count'),
-            'traces_count' => Arr::get($user, 'traces.count'),
-            'blocks_received' => [
-                'count' => Arr::get($user, 'blocks.received.count'),
-                'active' => Arr::get($user, 'blocks.received.active'),
-            ],
-            'messages' => [
-                'received' => [
-                    'count' => Arr::get($user, 'messages.received.count'),
-                    'unread' => Arr::get($user, 'messages.received.unread'),
-                ],
-                'sent' => Arr::get($user, 'messages.sent'),
-            ],
         ]);
     }
 }
